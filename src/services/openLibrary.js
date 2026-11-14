@@ -1,5 +1,5 @@
 const SEARCH_URL = 'https://openlibrary.org/search.json'
-const BOOK_FIELDS = 'key,title,author_name,first_publish_year,cover_i'
+const BOOK_FIELDS = 'key,title,author_name,first_publish_year,cover_i,subject'
 
 export async function searchBooks(query, signal) {
   const parameters = new URLSearchParams({
@@ -39,5 +39,8 @@ export async function searchBooks(query, signal) {
         : '',
       year: Number.isInteger(book.first_publish_year) ? book.first_publish_year : null,
       coverId: Number.isInteger(book.cover_i) ? book.cover_i : null,
+      subjects: Array.isArray(book.subject)
+        ? book.subject.filter((subject) => typeof subject === 'string')
+        : [],
     }))
 }
