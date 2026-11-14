@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import BookResults from './components/BookResults.jsx'
 import SearchForm from './components/SearchForm.jsx'
+import SearchResults from './components/SearchResults.jsx'
 import ShelfPanel from './components/ShelfPanel.jsx'
 import RecommendationPanel from './components/RecommendationPanel.jsx'
 import { searchBooks } from './services/openLibrary.js'
@@ -107,22 +107,7 @@ function App() {
             onSearch={handleSearch}
             isLoading={search.status === 'loading' && search.destination === 'search'}
           />
-          <div
-            className="search-feedback"
-            aria-live="polite"
-            aria-busy={search.status === 'loading' && search.destination === 'search'}
-          >
-            {search.destination !== 'recommendations' && search.status === 'idle' && <p className="empty-state">Your search results will appear here.</p>}
-            {search.destination === 'search' && search.status === 'loading' && <p role="status">Searching Open Library…</p>}
-            {search.destination === 'search' && search.status === 'empty' && <p role="status">No books found. Try another search.</p>}
-            {search.destination === 'search' && search.status === 'error' && <p className="error-message" role="alert">{search.error}</p>}
-            {search.destination === 'search' && search.status === 'success' && (
-              <>
-                <p className="small-note" role="status">{search.books.length} books found.</p>
-                <BookResults books={search.books} savedKeys={savedKeys} onSave={handleSaveBook} />
-              </>
-            )}
-          </div>
+          <SearchResults search={search} savedKeys={savedKeys} onSave={handleSaveBook} />
         </section>
 
         <section className="content-section" id="shelf">
