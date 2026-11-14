@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import BookResults from './components/BookResults.jsx'
 import SearchForm from './components/SearchForm.jsx'
+import ShelfPanel from './components/ShelfPanel.jsx'
 import { searchBooks } from './services/openLibrary.js'
 import './App.css'
 
@@ -17,6 +18,9 @@ function App() {
   const [query, setQuery] = useState('')
   // Request status and its data change together, so they share one state object.
   const [search, setSearch] = useState({ status: 'idle', books: [], error: '' })
+  // Search results and the shelf both use these books, so the state lives in App.
+  const [shelfBooks, setShelfBooks] = useState([])
+  const savedKeys = new Set(shelfBooks.map((book) => book.key))
   // A ref stores the controller without causing an extra render.
   const activeRequest = useRef(null)
 
@@ -24,6 +28,19 @@ function App() {
   useEffect(() => {
     return () => activeRequest.current?.abort()
   }, [])
+
+  function handleSaveBook(book) {
+    setShelfBooks((currentBooks) => {
+      if (currentBooks.some((savedBook) => savedBook.key === book.key)) {
+        return currentBooks
+      }
+      return [...currentBooks, book]
+    })
+  }
+
+  function handleRemoveBook(bookKey) {
+    setShelfBooks((currentBooks) => currentBooks.filter((book) => book.key !== bookKey))
+  }
 
   async function handleSearch(event) {
     event.preventDefault()
@@ -87,7 +104,7 @@ function App() {
             {search.status === 'success' && (
               <>
                 <p className="small-note" role="status">{search.books.length} books found.</p>
-                <BookResults books={search.books} />
+                <BookResults books={search.books} savedKeys={savedKeys} onSave={handleSaveBook} />
               </>
             )}
           </div>
@@ -95,7 +112,8 @@ function App() {
 
         <section className="content-section" id="shelf">
           <SectionHeading eyebrow="YOUR READING LIFE" title="Your shelf" />
-          <div className="empty-state">Books you save will appear here.</div>
+          <p className="small-note">{shelfBooks.length} {shelfBooks.length === 1 ? 'book' : 'books'}</p>
+          <ShelfPanel books={shelfBooks} onRemove={handleRemoveBook} />
         </section>
 
         <section className="content-section" id="recommendations">

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-export default function BookCard({ book }) {
+export default function BookCard({ book, isSaved = false, onSave, onRemove }) {
   // This card owns the image-error state because it only affects its cover.
   const [coverUnavailable, setCoverUnavailable] = useState(!book.coverId)
   const coverUrl = book.coverId
@@ -25,6 +25,20 @@ export default function BookCard({ book }) {
         <p>{book.author || 'Author unknown'}</p>
         <p>{book.year || 'Publication year unknown'}</p>
       </div>
+      {(onSave || onRemove) && (
+        <div className="book-card-actions">
+          {onSave && (
+            <button type="button" onClick={() => onSave(book)} disabled={isSaved}>
+              {isSaved ? 'On your shelf' : 'Save for later'}
+            </button>
+          )}
+          {onRemove && (
+            <button type="button" onClick={() => onRemove(book.key)}>
+              Remove from shelf
+            </button>
+          )}
+        </div>
+      )}
     </article>
   )
 }
