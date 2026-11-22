@@ -5,8 +5,7 @@ export default function RecommendationPanel({ genre, onSearch, search, savedKeys
     return <div className="empty-state">Save books with recognizable genres to get a suggestion.</div>
   }
 
-  const isCurrentRecommendation = search.destination === 'recommendations'
-    && search.term === genre
+  const isCurrentRecommendation = search.term === genre
   const isLoading = isCurrentRecommendation && search.status === 'loading'
   const hasResults = isCurrentRecommendation && search.status === 'success'
 

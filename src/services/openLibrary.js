@@ -2,9 +2,9 @@ const SEARCH_URL = 'https://openlibrary.org/search.json'
 const BOOK_FIELDS = 'key,title,author_name,first_publish_year,cover_i,subject'
 const REQUEST_TIMEOUT = 10_000
 
-export async function searchBooks(query, signal) {
+export async function searchBooks(query, signal, searchField = 'q') {
   const parameters = new URLSearchParams({
-    q: query,
+    [searchField]: query,
     fields: BOOK_FIELDS,
     limit: '12',
   })

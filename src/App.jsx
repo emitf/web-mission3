@@ -9,21 +9,25 @@ import { loadShelf, saveShelf } from './services/libraryStorage.js'
 import { getCommonGenre } from './data/recommendations.js'
 import './App.css'
 
+const IDLE_SEARCH = { status: 'idle', books: [], error: '', term: '' }
+
 function App() {
   const [query, setQuery] = useState('')
   // Request status and its data change together, so they share one state object.
-  const [search, setSearch] = useState({ status: 'idle', books: [], error: '', term: '', destination: '' })
+  // Search and recommendations each keep their own, so one never wipes the other.
+  const [searches, setSearches] = useState({ search: IDLE_SEARCH, recommendations: IDLE_SEARCH })
   // Search results and the shelf both use these books, so the state lives in App.
   const [shelfBooks, setShelfBooks] = useState(loadShelf)
   const [shelfError, setShelfError] = useState('')
   const recommendedGenre = getCommonGenre(shelfBooks)
   const savedKeys = new Set(shelfBooks.map((book) => book.key))
-  // A ref stores the controller without causing an extra render.
-  const activeRequest = useRef(null)
+  // A ref stores one controller per destination without causing an extra render.
+  const activeRequests = useRef({})
 
-  // The form starts the fetch; this effect aborts it if App unmounts.
+  // The form starts the fetch; this effect aborts any open request if App unmounts.
   useEffect(() => {
-    return () => activeRequest.current?.abort()
+    const requests = activeRequests.current
+    return () => Object.values(requests).forEach((controller) => controller.abort())
   }, [])
 
   function updateShelf(nextBooks) {
@@ -45,25 +49,27 @@ function App() {
 
     if (searchTermTrimmed === '') return
 
-    activeRequest.current?.abort()
+    activeRequests.current[destination]?.abort()
     const controller = new AbortController()
-    activeRequest.current = controller
-    setSearch({ status: 'loading', books: [], error: '', term: searchTermTrimmed, destination })
+    activeRequests.current[destination] = controller
+    const setSearch = (next) => setSearches((current) => ({ ...current, [destination]: { ...next, term: searchTermTrimmed } }))
+    setSearch({ status: 'loading', books: [], error: '' })
 
     try {
-      const books = await searchBooks(searchTermTrimmed, controller.signal)
+      const searchField = destination === 'recommendations' ? 'subject' : 'q'
+      const books = await searchBooks(searchTermTrimmed, controller.signal, searchField)
 
       // Ignore a response if it no longer belongs to the active request.
-      if (activeRequest.current === controller) {
-        setSearch({ status: books.length > 0 ? 'success' : 'empty', books, error: '', term: searchTermTrimmed, destination })
+      if (activeRequests.current[destination] === controller) {
+        setSearch({ status: books.length > 0 ? 'success' : 'empty', books, error: '' })
       }
     } catch (error) {
-      if (error.name === 'AbortError' || activeRequest.current !== controller) return
+      if (error.name === 'AbortError' || activeRequests.current[destination] !== controller) return
 
       const message = error instanceof TypeError
         ? 'Could not connect to Open Library. Check your connection and try again.'
         : error.message
-      setSearch({ status: 'error', books: [], error: message, term: searchTermTrimmed, destination })
+      setSearch({ status: 'error', books: [], error: message })
     }
   }
 
@@ -91,9 +97,9 @@ function App() {
             query={query}
             onQueryChange={setQuery}
             onSearch={() => runSearch(query, 'search')}
-            isLoading={search.status === 'loading' && search.destination === 'search'}
+            isLoading={searches.search.status === 'loading'}
           />
-          <SearchResults search={search} savedKeys={savedKeys} onSave={handleSaveBook} />
+          <SearchResults search={searches.search} savedKeys={savedKeys} onSave={handleSaveBook} />
         </section>
 
         <section className="content-section" id="shelf">
@@ -108,7 +114,7 @@ function App() {
           <RecommendationPanel
             genre={recommendedGenre}
             onSearch={(genre) => runSearch(genre, 'recommendations')}
-            search={search}
+            search={searches.recommendations}
             savedKeys={savedKeys}
             onSave={handleSaveBook}
           />
