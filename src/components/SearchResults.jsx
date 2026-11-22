@@ -15,7 +15,7 @@ export default function SearchResults({ search, savedKeys, onSave }) {
       {isSearch && search.status === 'error' && <p className="error-message" role="alert">{search.error}</p>}
       {isSearch && search.status === 'success' && (
         <>
-          <p className="small-note" role="status">{search.books.length} books found.</p>
+          <p className="small-note" role="status">{search.books.length} {search.books.length === 1 ? 'book' : 'books'} found.</p>
           <BookResults books={search.books} savedKeys={savedKeys} onSave={onSave} />
         </>
       )}

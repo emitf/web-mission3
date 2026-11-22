@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import SectionHeading from './components/SectionHeading.jsx'
 import SearchForm from './components/SearchForm.jsx'
 import SearchResults from './components/SearchResults.jsx'
 import ShelfPanel from './components/ShelfPanel.jsx'
@@ -7,15 +8,6 @@ import { searchBooks } from './services/openLibrary.js'
 import { loadShelf, saveShelf } from './services/libraryStorage.js'
 import { getCommonGenre } from './data/recommendations.js'
 import './App.css'
-
-function SectionHeading({ eyebrow, title }) {
-  return (
-    <div className="section-heading">
-      <p className="eyebrow">{eyebrow}</p>
-      <h2>{title}</h2>
-    </div>
-  )
-}
 
 function App() {
   const [query, setQuery] = useState('')
@@ -48,17 +40,11 @@ function App() {
     updateShelf(shelfBooks.filter((book) => book.key !== bookKey))
   }
 
-  function handleSearch(event) {
-    event.preventDefault()
-    runSearch(query, 'search')
-  }
-
   async function runSearch(searchTerm, destination) {
     const searchTermTrimmed = searchTerm.trim()
 
     if (searchTermTrimmed === '') return
 
-    setQuery(searchTermTrimmed)
     activeRequest.current?.abort()
     const controller = new AbortController()
     activeRequest.current = controller
@@ -104,7 +90,7 @@ function App() {
           <SearchForm
             query={query}
             onQueryChange={setQuery}
-            onSearch={handleSearch}
+            onSearch={() => runSearch(query, 'search')}
             isLoading={search.status === 'loading' && search.destination === 'search'}
           />
           <SearchResults search={search} savedKeys={savedKeys} onSave={handleSaveBook} />

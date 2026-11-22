@@ -1,6 +1,11 @@
 export default function SearchForm({ query, onQueryChange, onSearch, isLoading }) {
+  function handleSubmit(event) {
+    event.preventDefault()
+    onSearch()
+  }
+
   return (
-    <form className="search-panel" onSubmit={onSearch}>
+    <form className="search-panel" onSubmit={handleSubmit}>
       <label htmlFor="book-search">What would you like to read?</label>
       <div className="search-row">
         <input

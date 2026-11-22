@@ -45,12 +45,9 @@ function getBookGenres(subjects) {
 }
 
 export function getCommonGenre(books) {
-  const genreCounts = books.reduce((counts, book) => {
-    getBookGenres(book.subjects).forEach((genre) => {
-      counts.set(genre, (counts.get(genre) || 0) + 1)
-    })
-    return counts
-  }, new Map())
+  const genreCounts = books
+    .flatMap((book) => getBookGenres(book.subjects))
+    .reduce((counts, genre) => counts.set(genre, (counts.get(genre) || 0) + 1), new Map())
 
   const mostCommon = GENRES
     .map(({ name }) => [name, genreCounts.get(name) || 0])
